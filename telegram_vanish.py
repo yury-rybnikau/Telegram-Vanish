@@ -6,13 +6,14 @@ import logging
 import asyncio
 import time
 
-api_id = YOUR_API_ID
-api_hash = 'YOUR_API_HASH'
+api_id = YOUR_API_ID  # Your API ID
+api_hash = 'YOUR_API_HASH'  # Your API HASH
 client = TelegramClient('session_name', api_id, api_hash)
 
 # Logging setup
 logging.basicConfig(filename='script.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
+# Function to get chats (including those you have left)
 async def export_chats():
     await client.start()
     me = await client.get_me()
@@ -41,6 +42,20 @@ async def export_chats():
     print("Chat list has been saved to 'chats_list.csv'.")
     logging.info("Chat list exported and saved to file.")
 
+# Function to get chat ID by username (e.g., @minks_new)
+async def get_chat_id_by_username(username: str):
+    await client.start()
+    try:
+        entity = await client.get_entity(username)  # Get chat entity by username
+        print(f"Chat ID for {username}: {entity.id}")
+        logging.info(f"Chat ID for {username}: {entity.id}")
+        return entity.id
+    except Exception as e:
+        print(f"Failed to find chat with username {username}: {e}")
+        logging.error(f"Failed to find chat with username {username}: {e}")
+        return None
+
+# Function to delete messages and leave chats from a list of IDs in a CSV file
 async def delete_messages_from_csv():
     filename = input("Enter the CSV file name (default is 'chats_list.csv'): ") or 'chats_list.csv'
     chat_ids = []
@@ -57,10 +72,12 @@ async def delete_messages_from_csv():
 
     await delete_messages_and_leave_chats(chat_ids)
 
+# Function to delete messages and leave a specific chat by its ID
 async def delete_messages_from_chat():
     chat_id = input("Enter chat ID: ")
     await delete_messages_and_leave_chats([chat_id])
 
+# General function to delete messages and leave chats
 async def delete_messages_and_leave_chats(chat_ids):
     await client.start()
     me = await client.get_me()
@@ -113,11 +130,13 @@ async def delete_messages_and_leave_chats(chat_ids):
             logging.error(f"Error processing chat ID {chat_id}: {e}")
             print(f"Error processing chat ID {chat_id}: {e}")
 
+# Interactive menu
 def print_menu():
     print("\nSelect an action:")
     print("1. Export chats and bots where you have sent messages to a CSV file")
     print("2. Delete all your messages and leave chats listed in a CSV file")
     print("3. Delete all your messages and leave a specific chat by ID")
+    print("4. Get chat ID by username (e.g., @minks_new)")
     print("0. Exit")
 
 async def main_menu():
@@ -131,6 +150,9 @@ async def main_menu():
             await delete_messages_from_csv()
         elif choice == '3':
             await delete_messages_from_chat()
+        elif choice == '4':
+            username = input("Enter chat or bot username (e.g., @minks_new): ")
+            await get_chat_id_by_username(username)
         elif choice == '0':
             print("Exiting the program.")
             break
